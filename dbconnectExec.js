@@ -3,7 +3,7 @@ const dataconfig = require("./config.js");
 const config = {
     user: dataconfig.DB.user,
     password:  dataconfig.DB.password,
-    server:  dataconfig.DB.se, // You can use 'localhost\\instance' to connect to named instance
+    server:  dataconfig.DB.server, // You can use 'localhost\\instance' to connect to named instance
     database:  dataconfig.DB.database,
 }
 
@@ -14,10 +14,10 @@ async function executeQuery(aQuery){
 
     console.log(result)
 
-    return result
+    return result.recordset
 }
 
-executeQuery()
 
 
-module.exports = {executeQuery: executeQuery}
+
+module.exports = {executeQuery: executeQuery};
