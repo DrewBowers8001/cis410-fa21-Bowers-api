@@ -4,65 +4,60 @@ const db = require("./dbconnectExec.js")
 const jwt = require("jsonwebtoken");
 const app = express(); 
 const config = require("./config.js");
-//const auth = require("./middleware/authenticate")
-app.use(express.json());
+const auth = require("./middleware/authenticate")
+const cors = require("cors");
 
+app.use(express.json());
+app.use(cors());
 const PORT = process.env.PORT || 5000;
 
 
-app.listen(5000,() => {
-    console.log(" app is running on port 5000")
+app.listen(PORT,() => {
+    console.log(` app is running on port ${PORT}`)
 });
-const auth = async(req,res,next)=> { 
- console.log(" in middleware", req)  
-} 
+//const auth = async(req,res,next)=> { 
+// console.log(" in middleware", req.header("Authorization"))  
+ //next();
+//} 
+
+app.get("/Availibilities/me", auth, (req,res) => { 
+  console.log("here is the employee", req.Employee.EmployeePK)
+ 
+  
+  let query = ` Select * From availibility Where EmployeePK  = ${req.Employee.EmployeePK}`
+  db.executeQuery(query).then(() => { 
+    res.status(200).send()
+  })
+})
 app.post("/Availibility", auth, async (req,res)=> { 
 
-  try{ 
-    let AvailibilityPK = req.body.AvailibilityPK;  
+  try{  
+ 
     let time = req.body.time;
     let preffered_hours = req.body.preffered_hours;
     let EmployeePK = req.body.EmployeePK;
 
-    console.log(AvailibilityPK,time,preffered_hours,EmployeePK);
-    if(!AvailibilityPK || !time || !preffered_hours || !EmployeePK ){
+    console.log(time,preffered_hours,EmployeePK);
+    if( !time || !preffered_hours || !EmployeePK ){
       return res.status(400).send("bad Request")}
-   
+    
+      console.log("here is the employee", req.Employee)
      
+      insertQuery = `INSERT INTO availibility(time, preffered_hours, EmployeePK)
+      Output inserted.EmployeePK, inserted.time, inserted.preffered_hours
+      Values('${time}','${preffered_hours}','${req.Employee.EmployeePK}') `
 
+      let insertedReview = await db.executeQuery(insertQuery);
      
   }
   catch(err){ 
     console.log(" error is here in /Availibiliity", err)
     res.status(500).send();
   }
+  res.send("here is the response")
 });
  
 
-
-/*app.post("/Availibility",  async (req,res) => {
-try{
-  
-    let AvailibilityPK = req.body.AvailibilityPK;  
-  let time = req.body.time;
-  let Pref = req.body.preffered_hours;
-  let EmployeePK = req.body.EmployeePK;
-    if(!AvailibilityPK || !time  || !Pref || !EmployeePK ){ 
-        return res.status(400).send("bad Request")
-
-    
-    }
-    res.send("here is the response")
-}
-catch(err){ 
-    console.log("error in reviews", err)
-    res.status(500).send();
-}
-
-
-
-}); 
-*/
 
 
 
@@ -101,7 +96,7 @@ catch(err){
         // 3. check Password
       
         let user = result[0];
-        console.log("user", user);
+        //console.log("user", user);
       
         if (!bcrypt.compareSync(password, user.password)) {
           return res.status(401).send("Invalid credentials");
@@ -150,12 +145,27 @@ app.get("/hi",(req, res) => { res.send("hello world ")
 
 })
 
-app.get("/", (req, res) => { res.send("API is running ")})
+app.get("/", (req, res) => { res.send("API is running ")});
+
+app.post("/Employee/logout", auth , (req,res) => { 
+
+  let query = ` Update Employee
+  set Token = Null
+  where EmployeePK = ${req.Employee.EmployeePK}`
+  db.executeQuery(query).then(() => { 
+    res.status(200).send()
+    .catch((err)=> { 
+       // console.log("err",err) 
+    }) 
+  })
+ 
+
+} );
 
 
 
 app.post("/Employee/get", async (req, res) => {
-   res.send("/Employee called");
+   
   
      console.log("request body", req.body);
     
@@ -194,9 +204,7 @@ app.post("/Employee/get", async (req, res) => {
 
 app.get("/Employee", (req,res ) => {
 
-    db.executeQuery(
-        `Select * 
-        from Employee`)
+    db.executeQuery( `Select * From Shifts inner join Employee on Shifts.EmployeePK=Employee.EmployeePK`)
     .then((theResults)=> {
         res.status(200).send(theResults)
     })
@@ -212,7 +220,7 @@ app.get("/Employee", (req,res ) => {
 app.get("/Employee/:pk", (req, res) => { 
     let pk = req.params.pk
 
-    console.log(pk)
+    //console.log(pk)
 
    let myQuery = `Select * from shifts left join Employee on Employee.EmployeePK = ShiftsPK where ShiftsPK = ${pk}`;
 
@@ -235,5 +243,12 @@ if (result[0]){
 })
 
 });
+
+
+app.get("/Employees/Me",auth, (req,res) => { 
+   console.log("Employee")
+   res.send(req.Employee) });
+
+
 
 //app.put();

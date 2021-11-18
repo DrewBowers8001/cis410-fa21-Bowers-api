@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/3a2e7d33-7c7c-418a-b83a-ffe46a546be5/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/CIS410-fa21-Bowers-Api",
+    "appService.deploySubpath": "."
+}
